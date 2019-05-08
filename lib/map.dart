@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:http/http.dart' as http;
@@ -24,6 +25,7 @@ class MapState extends State<MapView> {
 
 	MapType _currentMapType = MapType.normal;
 	Map<PolylineId, Polyline> _routes = <PolylineId, Polyline>{};
+	Map<MarkerId, Marker> _markers = <MarkerId, Marker>{};
 
 	@override
 	void initState() {
@@ -62,7 +64,7 @@ class MapState extends State<MapView> {
 				target: LatLng(
 					directions['routes'][0]['legs'][0]['start_location']['lat'],
 					directions['routes'][0]['legs'][0]['start_location']['lng']),
-				zoom: 12.0,
+				zoom: 7.0,
 			);
 		});
 
@@ -83,12 +85,14 @@ class MapState extends State<MapView> {
 				points += '|$endLat,$endLng';
 			}
 			counter ++;
+			
+			decodePolyline(step['polyline']['points']);
 		});
 
 		final PolylineId polylineId = PolylineId(
 			directions['routes'][0]['summary']);
 
-		getSnappedRoutes(points, polylineId);
+		//getSnappedRoutes(points, polylineId);
 	}
 
 	void getSnappedRoutes(path, id) async {
@@ -126,6 +130,71 @@ class MapState extends State<MapView> {
 		});
 	}
 
+	void setMarkers() {
+		final MarkerId markerId = MarkerId('0');
+
+		final Marker marker = Marker(
+			markerId: markerId,
+			position: _cameraPosition.target,
+			infoWindow: InfoWindow(title: 'Place', snippet: '*'),
+		);
+
+		setState(() {
+			_markers[markerId] = marker;
+		});
+	}
+
+	decodePolyline(String str) {
+		var index = 0;
+		var	lat = 0;
+		var	lng = 0;
+			List<dynamic> coordinates = <String>[];
+		var	shift = 0;
+		var	result = 0;
+		var	byte;
+		var	latitudeChange;
+		var	longitudeChange;
+		var	factor = pow(10, 5);
+
+		// Coordinates have variable length when encoded, so just keep
+		// track of whether we've hit the end of the string. In each
+		// loop iteration, a single coordinate is decoded.
+		while (index < str.length) {
+
+			// Reset shift, result, and byte
+			byte = null;
+			shift = 0;
+			result = 0;
+
+			do {
+				byte = str.codeUnitAt(index++) - 63;
+				result |= (byte & 0x1f) << shift;
+				shift += 5;
+			} while (byte >= 0x20);
+
+			debugPrint('setPolylines $result');
+
+			latitudeChange = ((result & 1) ? ~(result >> 1) : (result >> 1));
+
+			shift = result = 0;
+
+			do {
+				byte = str.codeUnitAt(index++) - 63;
+				result |= (byte & 0x1f) << shift;
+				shift += 5;
+			} while (byte >= 0x20);
+
+			longitudeChange = ((result & 1) ? ~(result >> 1) : (result >> 1));
+
+			lat += latitudeChange;
+			lng += longitudeChange;
+
+			coordinates.add(LatLng(lat / factor, lng / factor));
+		}
+
+		return coordinates;
+	}
+
 	@override
 	Widget build(BuildContext context) {
 		return
@@ -137,7 +206,7 @@ class MapState extends State<MapView> {
 						initialCameraPosition: _cameraPosition,
 						compassEnabled: true,
 						cameraTargetBounds: CameraTargetBounds(_bounds),
-						minMaxZoomPreference: MinMaxZoomPreference.unbounded,
+						minMaxZoomPreference: MinMaxZoomPreference(7.0, null),
 						mapType: _currentMapType,
 						rotateGesturesEnabled: true,
 						scrollGesturesEnabled: true,
@@ -145,6 +214,7 @@ class MapState extends State<MapView> {
 						zoomGesturesEnabled: true,
 						myLocationEnabled: false,
 						polylines: Set<Polyline>.of(_routes.values),
+						markers: Set<Marker>.of(_markers.values),
 					),
 					Padding(
 						padding: const EdgeInsets.all(16.0),

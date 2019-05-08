@@ -109,8 +109,6 @@ class DirectionsBodyState extends State<DirectionsBody> {
 		List<Widget> placeList = <Widget>[];
 
 		predictions.forEach((prediction) {
-			debugPrint(prediction['description']);
-
 			placeList.add(
 				Padding(
 					padding: const EdgeInsets.symmetric(
