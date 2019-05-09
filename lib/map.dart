@@ -64,7 +64,7 @@ class MapState extends State<MapView> {
 				target: LatLng(
 					directions['routes'][0]['legs'][0]['start_location']['lat'],
 					directions['routes'][0]['legs'][0]['start_location']['lng']),
-				zoom: 12.0,
+				zoom: 16.0,
 			);
 		});
 
@@ -76,6 +76,8 @@ class MapState extends State<MapView> {
 			decodePolyline(step['polyline']['points'], counter);
 			counter++;
 		});
+
+		setMarkers();
 	}
 
 	void setMarkers() {
