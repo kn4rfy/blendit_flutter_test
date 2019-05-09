@@ -69,64 +69,12 @@ class MapState extends State<MapView> {
 		});
 
 		List<dynamic> steps = directions['routes'][0]['legs'][0]['steps'];
-		String points = '';
 
 		int counter = 0;
 
 		steps.forEach((step) {
-			var startLat = step['start_location']['lat'];
-			var startLng = step['start_location']['lng'];
-			var endLat = step['end_location']['lat'];
-			var endLng = step['end_location']['lng'];
-
-			if (counter == 0) {
-				points += '$startLat,$startLng|$endLat,$endLng';
-			} else {
-				points += '|$endLat,$endLng';
-			}
-			counter ++;
-			
-			decodePolyline(step['polyline']['points']);
-		});
-
-		final PolylineId polylineId = PolylineId(
-			directions['routes'][0]['summary']);
-
-		//getSnappedRoutes(points, polylineId);
-	}
-
-	void getSnappedRoutes(path, id) async {
-		final response =
-		await http.get(
-			'https://roads.googleapis.com/v1/snapToRoads?path=$path&interpolate=true&key=$_googleMapsApiKey');
-
-		if (response.statusCode == 200) {
-			setPolylines(response.body, id);
-		} else {
-			ErrorWidget('Error! Please try again.');
-		}
-	}
-
-	void setPolylines(data, id) {
-		debugPrint('setPolylines $data');
-
-		var snappedRoutes = json.decode(data);
-
-		List<dynamic> snappedPoints = snappedRoutes['snappedPoints'];
-		List<LatLng> points = <LatLng>[];
-
-		snappedPoints.forEach((snappedPoint) {
-			points.add(LatLng(
-				snappedPoint['location']['latitude'],
-				snappedPoint['location']['longitude']));
-		});
-
-		setState(() {
-			_routes[id] = Polyline(
-				polylineId: id,
-				points: points,
-				color: Colors.blue,
-			);
+			decodePolyline(step['polyline']['points'], counter);
+			counter++;
 		});
 	}
 
@@ -144,27 +92,27 @@ class MapState extends State<MapView> {
 		});
 	}
 
-	decodePolyline(String str) {
+	void decodePolyline(String str, counter) {
 		var index = 0;
-		var	lat = 0;
-		var	lng = 0;
-			List<dynamic> coordinates = <String>[];
-		var	shift = 0;
-		var	result = 0;
-		var	byte;
-		var	latitudeChange;
-		var	longitudeChange;
-		var	factor = pow(10, 5);
+		var lat = 0;
+		var lng = 0;
+		List<LatLng> coordinates = <LatLng>[];
+		var shift = 0;
+		var result = 0;
+		var byte;
+		var latitudeChange;
+		var longitudeChange;
+		var factor = pow(10, 5);
 
 		// Coordinates have variable length when encoded, so just keep
 		// track of whether we've hit the end of the string. In each
 		// loop iteration, a single coordinate is decoded.
 		while (index < str.length) {
-
 			// Reset shift, result, and byte
 			byte = null;
 			shift = 0;
 			result = 0;
+			int bitwiseResult;
 
 			do {
 				byte = str.codeUnitAt(index++) - 63;
@@ -172,11 +120,12 @@ class MapState extends State<MapView> {
 				shift += 5;
 			} while (byte >= 0x20);
 
-			debugPrint('setPolylines $result');
+			bitwiseResult = (result & 1);
 
-			latitudeChange = ((result & 1) ? ~(result >> 1) : (result >> 1));
+			latitudeChange =
+			(bitwiseResult == 1 ? ~(result >> 1) : (result >> 1));
 
-			shift = result = 0;
+			shift = result = bitwiseResult = 0;
 
 			do {
 				byte = str.codeUnitAt(index++) - 63;
@@ -184,7 +133,10 @@ class MapState extends State<MapView> {
 				shift += 5;
 			} while (byte >= 0x20);
 
-			longitudeChange = ((result & 1) ? ~(result >> 1) : (result >> 1));
+			bitwiseResult = (result & 1);
+
+			longitudeChange =
+			(bitwiseResult == 1 ? ~(result >> 1) : (result >> 1));
 
 			lat += latitudeChange;
 			lng += longitudeChange;
@@ -192,45 +144,52 @@ class MapState extends State<MapView> {
 			coordinates.add(LatLng(lat / factor, lng / factor));
 		}
 
-		return coordinates;
+		setState(() {
+			_routes[PolylineId('$counter')] = Polyline(
+				polylineId: PolylineId('$counter'),
+				points: coordinates,
+				color: Colors.blue,
+				width: 5,
+				startCap: Cap.roundCap,
+				endCap: Cap.roundCap,
+				jointType: JointType.round);
+		});
 	}
 
 	@override
 	Widget build(BuildContext context) {
-		return
-			Scaffold(
-				appBar: AppBar(title: Text('Map')),
-				body: Stack(children: <Widget>[
-					GoogleMap(
-						onMapCreated: onMapCreated,
-						initialCameraPosition: _cameraPosition,
-						compassEnabled: true,
-						cameraTargetBounds: CameraTargetBounds(_bounds),
-						minMaxZoomPreference: MinMaxZoomPreference(7.0, null),
-						mapType: _currentMapType,
-						rotateGesturesEnabled: true,
-						scrollGesturesEnabled: true,
-						tiltGesturesEnabled: true,
-						zoomGesturesEnabled: true,
-						myLocationEnabled: false,
-						polylines: Set<Polyline>.of(_routes.values),
-						markers: Set<Marker>.of(_markers.values),
-					),
-					Padding(
-						padding: const EdgeInsets.all(16.0),
-						child: Align(
-							alignment: Alignment.bottomRight,
-							child: FloatingActionButton(
-								onPressed: _onMapTypeButtonPressed,
-								materialTapTargetSize: MaterialTapTargetSize
-									.padded,
-								backgroundColor: Colors.green,
-								child: const Icon(Icons.map, size: 36.0),
-							),
+		return Scaffold(
+			appBar: AppBar(title: Text('Map')),
+			body: Stack(children: <Widget>[
+				GoogleMap(
+					onMapCreated: onMapCreated,
+					initialCameraPosition: _cameraPosition,
+					compassEnabled: true,
+					cameraTargetBounds: CameraTargetBounds(_bounds),
+					minMaxZoomPreference: MinMaxZoomPreference(7.0, null),
+					mapType: _currentMapType,
+					rotateGesturesEnabled: true,
+					scrollGesturesEnabled: true,
+					tiltGesturesEnabled: true,
+					zoomGesturesEnabled: true,
+					myLocationEnabled: false,
+					polylines: Set<Polyline>.of(_routes.values),
+					markers: Set<Marker>.of(_markers.values),
+				),
+				Padding(
+					padding: const EdgeInsets.all(16.0),
+					child: Align(
+						alignment: Alignment.bottomRight,
+						child: FloatingActionButton(
+							onPressed: _onMapTypeButtonPressed,
+							materialTapTargetSize: MaterialTapTargetSize.padded,
+							backgroundColor: Colors.green,
+							child: const Icon(Icons.map, size: 36.0),
 						),
 					),
-				]),
-			);
+				),
+			]),
+		);
 	}
 
 	Completer<GoogleMapController> _googleMapControllerCompleter = Completer();
