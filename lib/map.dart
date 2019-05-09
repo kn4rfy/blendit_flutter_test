@@ -64,7 +64,7 @@ class MapState extends State<MapView> {
 				target: LatLng(
 					directions['routes'][0]['legs'][0]['start_location']['lat'],
 					directions['routes'][0]['legs'][0]['start_location']['lng']),
-				zoom: 7.0,
+				zoom: 12.0,
 			);
 		});
 
