@@ -159,6 +159,18 @@ class MapState extends State<MapView> {
 		});
 	}
 
+	getDistance(startLat, startLng, endLat, endLng) {
+		var distance = 12742 *
+			asin(sqrt(0.5 -
+				cos((endLat - startLat) * pi / 180) / 2 +
+				cos(startLat * pi / 180) *
+					cos(endLat * pi / 180) *
+					(1 - cos((endLng - startLng) * pi / 180)) /
+					2));
+
+		return distance;
+	}
+
 	@override
 	Widget build(BuildContext context) {
 		return Scaffold(
