@@ -5,92 +5,93 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+
 import 'page.dart';
 
 const CameraPosition _kInitialPosition =
-    CameraPosition(target: LatLng(-33.852, 151.211), zoom: 11.0);
+CameraPosition(target: LatLng(-33.852, 151.211), zoom: 11.0);
 
 class MapCoordinatesPage extends Page {
-  MapCoordinatesPage() : super(const Icon(Icons.map), 'Map coordinates');
+	MapCoordinatesPage() : super(const Icon(Icons.map), 'Map coordinates');
 
-  @override
-  Widget build(BuildContext context) {
-    return const _MapCoordinatesBody();
-  }
+	@override
+	Widget build(BuildContext context) {
+		return const _MapCoordinatesBody();
+	}
 }
 
 class _MapCoordinatesBody extends StatefulWidget {
-  const _MapCoordinatesBody();
+	const _MapCoordinatesBody();
 
-  @override
-  State<StatefulWidget> createState() => _MapCoordinatesBodyState();
+	@override
+	State<StatefulWidget> createState() => _MapCoordinatesBodyState();
 }
 
 class _MapCoordinatesBodyState extends State<_MapCoordinatesBody> {
-  _MapCoordinatesBodyState();
+	_MapCoordinatesBodyState();
 
-  GoogleMapController mapController;
-  LatLngBounds _visibleRegion = LatLngBounds(
-    southwest: const LatLng(0, 0),
-    northeast: const LatLng(0, 0),
-  );
+	GoogleMapController mapController;
+	LatLngBounds _visibleRegion = LatLngBounds(
+		southwest: const LatLng(0, 0),
+		northeast: const LatLng(0, 0),
+	);
 
-  @override
-  Widget build(BuildContext context) {
-    final GoogleMap googleMap = GoogleMap(
-      onMapCreated: onMapCreated,
-      initialCameraPosition: _kInitialPosition,
-    );
+	@override
+	Widget build(BuildContext context) {
+		final GoogleMap googleMap = GoogleMap(
+			onMapCreated: onMapCreated,
+			initialCameraPosition: _kInitialPosition,
+		);
 
-    final List<Widget> columnChildren = <Widget>[
-      Padding(
-        padding: const EdgeInsets.all(10.0),
-        child: Center(
-          child: SizedBox(
-            width: 300.0,
-            height: 200.0,
-            child: googleMap,
-          ),
-        ),
-      ),
-    ];
+		final List<Widget> columnChildren = <Widget>[
+			Padding(
+				padding: const EdgeInsets.all(10.0),
+				child: Center(
+					child: SizedBox(
+						width: 300.0,
+						height: 200.0,
+						child: googleMap,
+					),
+				),
+			),
+		];
 
-    if (mapController != null) {
-      final String currentVisibleRegion = 'VisibleRegion:'
-          '\nnortheast: ${_visibleRegion.northeast},'
-          '\nsouthwest: ${_visibleRegion.southwest}';
-      columnChildren.add(Center(child: Text(currentVisibleRegion)));
-      columnChildren.add(_getVisibleRegionButton());
-    }
+		if (mapController != null) {
+			final String currentVisibleRegion = 'VisibleRegion:'
+				'\nnortheast: ${_visibleRegion.northeast},'
+				'\nsouthwest: ${_visibleRegion.southwest}';
+			columnChildren.add(Center(child: Text(currentVisibleRegion)));
+			columnChildren.add(_getVisibleRegionButton());
+		}
 
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.start,
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: columnChildren,
-    );
-  }
+		return Column(
+			mainAxisAlignment: MainAxisAlignment.start,
+			crossAxisAlignment: CrossAxisAlignment.stretch,
+			children: columnChildren,
+		);
+	}
 
-  void onMapCreated(GoogleMapController controller) async {
-    final LatLngBounds visibleRegion = await controller.getVisibleRegion();
-    setState(() {
-      mapController = controller;
-      _visibleRegion = visibleRegion;
-    });
-  }
+	void onMapCreated(GoogleMapController controller) async {
+		final LatLngBounds visibleRegion = await controller.getVisibleRegion();
+		setState(() {
+			mapController = controller;
+			_visibleRegion = visibleRegion;
+		});
+	}
 
-  Widget _getVisibleRegionButton() {
-    return Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: RaisedButton(
-        child: const Text('Get Visible Region Bounds'),
-        onPressed: () async {
-          final LatLngBounds visibleRegion =
-              await mapController.getVisibleRegion();
-          setState(() {
-            _visibleRegion = visibleRegion;
-          });
-        },
-      ),
-    );
-  }
+	Widget _getVisibleRegionButton() {
+		return Padding(
+			padding: const EdgeInsets.all(8.0),
+			child: RaisedButton(
+				child: const Text('Get Visible Region Bounds'),
+				onPressed: () async {
+					final LatLngBounds visibleRegion =
+					await mapController.getVisibleRegion();
+					setState(() {
+						_visibleRegion = visibleRegion;
+					});
+				},
+			),
+		);
+	}
 }

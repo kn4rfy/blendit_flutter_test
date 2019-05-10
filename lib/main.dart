@@ -3,7 +3,9 @@
 // found in the LICENSE file.
 
 import 'package:flutter/material.dart';
+
 import 'animate_camera.dart';
+import 'directions.dart';
 import 'map_coordinates.dart';
 import 'map_ui.dart';
 import 'marker_icons.dart';
@@ -12,8 +14,6 @@ import 'page.dart';
 import 'place_marker.dart';
 import 'place_polyline.dart';
 import 'scrolling_map.dart';
-
-import 'directions.dart';
 
 final List<Page> _allPages = <Page>[
 	Directions(),
