@@ -94,6 +94,7 @@ class MapState extends State<MapView> {
 		});
 	}
 
+	// Helper function to decode encoded polyline because google web api only returns encoded polyline and not array of coordinates
 	void decodePolyline(String str, counter) {
 		var index = 0;
 		var lat = 0;
