@@ -46,6 +46,7 @@ class MapState extends State<MapView> {
 		});
 	}
 
+	// this is where we process the return of getDirections() in directions.dart
 	void processDirectionsData(data) {
 		var directions = json.decode(data);
 
@@ -102,6 +103,7 @@ class MapState extends State<MapView> {
 		getRestaurants(center.latitude, center.longitude);
 	}
 
+	// Use facebook web place search api for getting restaurants in a specific location
 	void getRestaurants(latitude, longitude) async {
 		final response =
 		await http.get(

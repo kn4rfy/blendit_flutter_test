@@ -69,6 +69,7 @@ class DirectionsState extends State<Directions> {
 		});
 	}
 
+	// google map web api for getting places by name
 	void getPlacesByAutocomplete(value, fieldName) async {
 		setState(() {
 			_isLoading = true;
@@ -134,6 +135,7 @@ class DirectionsState extends State<Directions> {
 		});
 	}
 
+	// google map web api for getting directions from places selected
 	void getDirections() async {
 		setState(() {
 			_isLoading = true;

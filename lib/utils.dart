@@ -2,7 +2,8 @@ import 'dart:math';
 
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
-// Helper function to decode encoded polyline because google web api only returns encoded polyline and not array of coordinates
+// I used this function to decode the encoded polyline from google maps result which don't have an array of coordinates for the polyline.
+// Flutter google maps still don't have a function that converts encoded polyline to array of coordinates so I made this one
 decodePolyline(String str) {
 	var index = 0;
 	var lat = 0;
@@ -58,12 +59,15 @@ decodePolyline(String str) {
 	return coordinates;
 }
 
+// Helper function that gets the center of the route line not the center of area.
+// Flutter google maps still don't have the function to get center of a polyline coordinates
 getLineCenter(points) {
 	var totalDistance = getPolylineLength(points);
 	var midpoint = getCenterCoordinate(points, totalDistance);
 	return midpoint;
 }
 
+// support function for getLineCenter
 getPolylineLength(List<LatLng> points) {
 	double distance = 0;
 
@@ -76,6 +80,7 @@ getPolylineLength(List<LatLng> points) {
 	return distance;
 }
 
+// support function for getLineCenter
 getCenterCoordinate(List<LatLng> points, totalDistance) {
 	double midDistance = totalDistance / 2;
 	double distance = 0;
@@ -111,6 +116,7 @@ getCenterCoordinate(List<LatLng> points, totalDistance) {
 //
 // Earth's diameter in Km. = 12742
 
+// calculator function for distance using haversine formula
 calculateDistance(startLat, startLng, endLat, endLng) {
 	return 12742 *
 		asin(sqrt(0.5 -
@@ -121,6 +127,8 @@ calculateDistance(startLat, startLng, endLat, endLng) {
 				2));
 }
 
+// source https://rbrundritt.wordpress.com/2008/10/14/calculate-midpoint-of-polyline/ code converted to dart
+// calculator function for bearing
 calculateBearing(startLat, startLng, endLat, endLng) {
 	return ((atan2(sin((endLng - startLng) * pi / 180) * cos(endLat * pi / 180),
 		cos(startLat * pi / 180) * sin(endLat * pi / 180) -
@@ -128,6 +136,7 @@ calculateBearing(startLat, startLng, endLat, endLng) {
 				cos((endLng - startLng) * pi / 180)) * 180 / pi) + 360) % 360;
 }
 
+// calculator function for coordinate
 calculateCoordinate(originLat, originLng, bearing, arcLength) {
 	var resultLat = asin(sin(originLat * pi / 180) * cos(arcLength / 12742) +
 		cos(originLat * pi / 180) * sin(arcLength / 12742) *
