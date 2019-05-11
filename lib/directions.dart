@@ -5,26 +5,16 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
 import 'map.dart';
-import 'page.dart';
 
-class Directions extends Page {
-	Directions() : super(const Icon(Icons.map), 'Directions');
-
-	@override
-	Widget build(BuildContext context) {
-		return const DirectionsBody();
-	}
-}
-
-class DirectionsBody extends StatefulWidget {
-	const DirectionsBody();
+class Directions extends StatefulWidget {
+	const Directions();
 
 	@override
-	State<StatefulWidget> createState() => DirectionsBodyState();
+	State<StatefulWidget> createState() => DirectionsState();
 }
 
-class DirectionsBodyState extends State<DirectionsBody> {
-	DirectionsBodyState();
+class DirectionsState extends State<Directions> {
+	DirectionsState();
 
 	static final _googleMapsApiKey = 'AIzaSyBQeUuxhQ3JZKQntndS3_X-L1tIihZVvaI';
 	Timer _debounce;
@@ -174,57 +164,63 @@ class DirectionsBodyState extends State<DirectionsBody> {
 
 	@override
 	Widget build(BuildContext context) {
-		return Column(children: <Widget>[
-			!_isOriginFocused && !_isDestinationFocused || _isOriginFocused ?
-			Padding(
-				padding: EdgeInsets.all(8),
-				child: TextField(
-					controller: _originController,
-					autocorrect: false,
-					onChanged: onChangeFromLocationInput,
-					focusNode: _originFocus,
-					decoration: InputDecoration(
-						labelText: 'Starting point',
-						hintText: "Search for starting point. Example: Narva, Estonia",
-						border: OutlineInputBorder()
+		return Scaffold(
+			appBar: AppBar(title: Text('Directions')),
+			body: Column(children: <Widget>[
+				!_isOriginFocused && !_isDestinationFocused || _isOriginFocused
+					?
+				Padding(
+					padding: EdgeInsets.all(8),
+					child: TextField(
+						controller: _originController,
+						autocorrect: false,
+						onChanged: onChangeFromLocationInput,
+						focusNode: _originFocus,
+						decoration: InputDecoration(
+							labelText: 'Starting point',
+							hintText: "Search for starting point. Example: Narva, Estonia",
+							border: OutlineInputBorder()
+						),
 					),
-				),
-			) : Container(),
-			!_isOriginFocused && !_isDestinationFocused || _isDestinationFocused
-				?
-			Padding(
-				padding: EdgeInsets.all(8),
-				child: TextField(
-					controller: _destinationController,
-					autocorrect: false,
-					onChanged: onChangeDestinationLocationInput,
-					focusNode: _destinationFocus,
-					decoration: InputDecoration(
-						labelText: 'Destination',
-						hintText: "Example: Talinn, Estonia",
-						border: OutlineInputBorder()
-					),
-				),
-			)
-				: Container(),
-			_origin != '' && _destination != '' ? Padding(
-				padding: const EdgeInsets.symmetric(
-					vertical: 0, horizontal: 8),
-				child: RaisedButton(
-					child: Text('Get Directions'),
-					onPressed: getDirections,
-				),
-			) : Container(),
-			_isLoading ? RefreshProgressIndicator() : Expanded(
-				child: ListView.builder
-					(
-					itemCount: _placesList.length,
-					itemBuilder: (BuildContext context, int index) {
-						return _placesList[index];
-					},
 				)
-			),
-		]);
+					: Container(),
+				!_isOriginFocused && !_isDestinationFocused ||
+					_isDestinationFocused
+					?
+				Padding(
+					padding: EdgeInsets.all(8),
+					child: TextField(
+						controller: _destinationController,
+						autocorrect: false,
+						onChanged: onChangeDestinationLocationInput,
+						focusNode: _destinationFocus,
+						decoration: InputDecoration(
+							labelText: 'Destination',
+							hintText: "Example: Talinn, Estonia",
+							border: OutlineInputBorder()
+						),
+					),
+				)
+					: Container(),
+				_origin != '' && _destination != '' ? Padding(
+					padding: const EdgeInsets.symmetric(
+						vertical: 0, horizontal: 8),
+					child: RaisedButton(
+						child: Text('Get Directions'),
+						onPressed: getDirections,
+					),
+				) : Container(),
+				_isLoading ? RefreshProgressIndicator() : Expanded(
+					child: ListView.builder
+						(
+						itemCount: _placesList.length,
+						itemBuilder: (BuildContext context, int index) {
+							return _placesList[index];
+						},
+					)
+				),
+			]),
+		);
 	}
 }
 

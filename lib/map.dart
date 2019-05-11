@@ -1,9 +1,10 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:math';
 
+import 'package:blendit_flutter_test/utils.dart' as Utils;
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:http/http.dart' as http;
 
 class MapView extends StatefulWidget {
 	final data;
@@ -16,13 +17,11 @@ class MapView extends StatefulWidget {
 
 class MapState extends State<MapView> {
 	final data;
-	static final _googleMapsApiKey = 'AIzaSyBQeUuxhQ3JZKQntndS3_X-L1tIihZVvaI';
+	static final _facebookAccessToken = '846459692372864|_sg9J80iHsK2QFygsYaTLd-0gDY';
 
 	MapState(this.data);
 
-	LatLngBounds _bounds;
 	CameraPosition _cameraPosition;
-
 	MapType _currentMapType = MapType.normal;
 	Map<PolylineId, Polyline> _routes = <PolylineId, Polyline>{};
 	Map<MarkerId, Marker> _markers = <MarkerId, Marker>{};
@@ -50,125 +49,91 @@ class MapState extends State<MapView> {
 	void processDirectionsData(data) {
 		var directions = json.decode(data);
 
-		setState(() {
-			_bounds = LatLngBounds(
-				northeast: LatLng(
-					directions['routes'][0]['bounds']['northeast']['lat'],
-					directions['routes'][0]['bounds']['northeast']['lng']),
-				southwest: LatLng(
-					directions['routes'][0]['bounds']['southwest']['lat'],
-					directions['routes'][0]['bounds']['southwest']['lng']),
-			);
-
-			_cameraPosition = CameraPosition(
-				target: LatLng(
-					directions['routes'][0]['legs'][0]['start_location']['lat'],
-					directions['routes'][0]['legs'][0]['start_location']['lng']),
-				zoom: 16.0,
-			);
-		});
-
 		List<dynamic> steps = directions['routes'][0]['legs'][0]['steps'];
+		List<LatLng> coordinates = <LatLng>[];
 
 		int counter = 0;
 
 		steps.forEach((step) {
-			decodePolyline(step['polyline']['points'], counter);
+			coordinates.addAll(
+				Utils.decodePolyline(step['polyline']['points']));
 			counter++;
 		});
-
-		setMarkers();
-	}
-
-	void setMarkers() {
-		final MarkerId markerId = MarkerId('0');
-
-		final Marker marker = Marker(
-			markerId: markerId,
-			position: _cameraPosition.target,
-			infoWindow: InfoWindow(title: 'Place', snippet: '*'),
-		);
-
-		setState(() {
-			_markers[markerId] = marker;
-		});
-	}
-
-	// Helper function to decode encoded polyline because google web api only returns encoded polyline and not array of coordinates
-	void decodePolyline(String str, counter) {
-		var index = 0;
-		var lat = 0;
-		var lng = 0;
-		List<LatLng> coordinates = <LatLng>[];
-		var shift = 0;
-		var result = 0;
-		var byte;
-		var latitudeChange;
-		var longitudeChange;
-		var factor = pow(10, 5);
-
-		// Coordinates have variable length when encoded, so just keep
-		// track of whether we've hit the end of the string. In each
-		// loop iteration, a single coordinate is decoded.
-		while (index < str.length) {
-			// Reset shift, result, and byte
-			byte = null;
-			shift = 0;
-			result = 0;
-			int bitwiseResult;
-
-			do {
-				byte = str.codeUnitAt(index++) - 63;
-				result |= (byte & 0x1f) << shift;
-				shift += 5;
-			} while (byte >= 0x20);
-
-			bitwiseResult = (result & 1);
-
-			latitudeChange =
-			(bitwiseResult == 1 ? ~(result >> 1) : (result >> 1));
-
-			shift = result = bitwiseResult = 0;
-
-			do {
-				byte = str.codeUnitAt(index++) - 63;
-				result |= (byte & 0x1f) << shift;
-				shift += 5;
-			} while (byte >= 0x20);
-
-			bitwiseResult = (result & 1);
-
-			longitudeChange =
-			(bitwiseResult == 1 ? ~(result >> 1) : (result >> 1));
-
-			lat += latitudeChange;
-			lng += longitudeChange;
-
-			coordinates.add(LatLng(lat / factor, lng / factor));
-		}
 
 		setState(() {
 			_routes[PolylineId('$counter')] = Polyline(
 				polylineId: PolylineId('$counter'),
 				points: coordinates,
 				color: Colors.blue,
-				width: 5,
-				startCap: Cap.roundCap,
-				endCap: Cap.roundCap,
 				jointType: JointType.round);
 		});
+
+		LatLng center = Utils.getLineCenter(coordinates);
+
+		setState(() {
+			_markers[MarkerId('start')] = Marker(
+				markerId: MarkerId('start'),
+				position: LatLng(
+					coordinates[0].latitude, coordinates[0].longitude),
+				infoWindow: InfoWindow(
+					title: 'Start', snippet: 'Start of route'),
+				icon: BitmapDescriptor.defaultMarkerWithHue(210.0),
+			);
+			_markers[MarkerId('center')] = Marker(
+				markerId: MarkerId('center'),
+				position: center,
+				infoWindow: InfoWindow(
+					title: 'Center', snippet: 'Center of route'),
+				icon: BitmapDescriptor.defaultMarkerWithHue(210.0),
+			);
+			_markers[MarkerId('end')] = Marker(
+				markerId: MarkerId('end'),
+				position: LatLng(coordinates[coordinates.length - 1].latitude,
+					coordinates[coordinates.length - 1].longitude),
+				infoWindow: InfoWindow(
+					title: 'End', snippet: 'End of route'),
+				icon: BitmapDescriptor.defaultMarkerWithHue(210.0),
+			);
+			_cameraPosition = CameraPosition(
+				target: center,
+			);
+		});
+
+		getRestaurants(center.latitude, center.longitude);
 	}
 
-	getDistance(startLat, startLng, endLat, endLng) {
-		var distance = 12742 *
-			asin(sqrt(0.5 -
-				cos((endLat - startLat) * pi / 180) / 2 +
-				cos(startLat * pi / 180) *
-					cos(endLat * pi / 180) *
-					(1 - cos((endLng - startLng) * pi / 180)) /
-					2));
+	void getRestaurants(latitude, longitude) async {
+		final response =
+		await http.get(
+			'https://graph.facebook.com/search?type=place&center=$latitude,$longitude&distance=20000&categories=["FOOD_BEVERAGE"]&fields=name,location,engagement&access_token=$_facebookAccessToken');
 
-		return distance;
+		if (response.statusCode == 200) {
+			setMarkers(response.body);
+		}
+	}
+
+	void setMarkers(data) {
+		var results = json.decode(data);
+		List<dynamic> restaurants = results['data'];
+
+		int counter = 0;
+		;
+
+		for (counter = 0; counter < 10; counter++) {
+			final MarkerId markerId = MarkerId('$counter');
+
+			final Marker marker = Marker(
+				markerId: markerId,
+				position: LatLng(restaurants[counter]['location']['latitude'],
+					restaurants[counter]['location']['longitude']),
+				infoWindow: InfoWindow(title: restaurants[counter]['name'],
+					snippet: restaurants[counter]['engagement']['social_sentence']),
+			);
+
+			setState(() {
+				_markers[markerId] = marker;
+			});
+		}
 	}
 
 	@override
@@ -180,7 +145,6 @@ class MapState extends State<MapView> {
 					onMapCreated: onMapCreated,
 					initialCameraPosition: _cameraPosition,
 					compassEnabled: true,
-					cameraTargetBounds: CameraTargetBounds(_bounds),
 					minMaxZoomPreference: MinMaxZoomPreference(7.0, null),
 					mapType: _currentMapType,
 					rotateGesturesEnabled: true,
@@ -190,6 +154,7 @@ class MapState extends State<MapView> {
 					myLocationEnabled: false,
 					polylines: Set<Polyline>.of(_routes.values),
 					markers: Set<Marker>.of(_markers.values),
+					onCameraMove: updateCameraPosition,
 				),
 				Padding(
 					padding: const EdgeInsets.all(16.0),
@@ -211,5 +176,11 @@ class MapState extends State<MapView> {
 
 	void onMapCreated(GoogleMapController controller) {
 		_googleMapControllerCompleter.complete(controller);
+	}
+
+	void updateCameraPosition(CameraPosition position) {
+		setState(() {
+			_cameraPosition = position;
+		});
 	}
 }

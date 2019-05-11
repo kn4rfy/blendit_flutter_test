@@ -6,7 +6,6 @@ import 'package:flutter/material.dart';
 
 import 'directions.dart';
 
-
 void main() {
 	runApp(MaterialApp(home: Directions()));
 }
