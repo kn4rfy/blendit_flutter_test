@@ -119,7 +119,7 @@ class MapState extends State<MapView> {
 		int counter = 0;
 		;
 
-		for (counter = 0; counter < 10; counter++) {
+		for (counter = 0; counter < 9; counter++) {
 			final MarkerId markerId = MarkerId('$counter');
 
 			final Marker marker = Marker(
