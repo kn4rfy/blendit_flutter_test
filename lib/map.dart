@@ -119,7 +119,6 @@ class MapState extends State<MapView> {
 		List<dynamic> restaurants = results['data'];
 
 		int counter = 0;
-		;
 
 		for (counter = 0; counter < 9; counter++) {
 			final MarkerId markerId = MarkerId('$counter');
