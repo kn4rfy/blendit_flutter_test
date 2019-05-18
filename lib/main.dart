@@ -2,9 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+import 'package:blendit_flutter_test/trips.dart';
 import 'package:flutter/material.dart';
-
-import 'directions.dart';
 
 void main() {
 	runApp(MaterialApp(
@@ -21,6 +20,6 @@ void main() {
 			),
 			scaffoldBackgroundColor: Color(0xFFC2E2EF),
 		),
-		home: Directions()
+		home: TripsView()
 	));
 }
