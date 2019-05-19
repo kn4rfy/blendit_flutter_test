@@ -26,10 +26,10 @@ class TripsState extends State<TripsView> {
 			body: Column(
 				children: <Widget>[
 					Padding(
-						padding: EdgeInsets.fromLTRB(32, 16, 0, 16),
+						padding: EdgeInsets.fromLTRB(48, 0, 0, 24),
 						child: Container(
 							child: Padding(
-								padding: EdgeInsets.all(32),
+								padding: EdgeInsets.all(48),
 								child: Column(
 									crossAxisAlignment: CrossAxisAlignment
 										.start,
@@ -38,14 +38,14 @@ class TripsState extends State<TripsView> {
 										Text(
 											'Your Trips',
 											style: TextStyle(
-												fontSize: 36,
+												fontSize: 32,
 												fontWeight: FontWeight.bold,
 												color: Color(0xFF0c63b6),
 											),
 										),
 										Padding(
 											padding: const EdgeInsets.only(
-												top: 16),
+												top: 24),
 											child: Row(
 												children: <Widget>[
 													Container(
@@ -114,54 +114,58 @@ class TripsState extends State<TripsView> {
 					Expanded(
 						child: ListView(),
 					),
-					Container(
-						child: Padding(
-							padding: EdgeInsets.all(32),
-							child: Row(
-							  children: <Widget>[
-								  Expanded(
-							      child: Column(
-							      	crossAxisAlignment: CrossAxisAlignment
-							      		.start,
-							      	mainAxisSize: MainAxisSize.min,
-							      	children: <Widget>[
-							      		Text(
-							      			'Upcoming Trips',
-							      			style: TextStyle(
-							      				fontSize: 36,
-							      				fontWeight: FontWeight.bold,
-							      				color: Color(0xFF0c63b6),
-							      			),
-										    textAlign: TextAlign.left
-							      		),
-							      		Padding(
-										      padding: EdgeInsets.all(16),
-									      ),
-							      		Text(
-							      			'Reservations, Homes, Hotels, Things to Do...',
-							      			style: TextStyle(
-							      				color: Color(0xFF0c63b6),
-							      			),
-										    textAlign: TextAlign.left
-							      		),
-							      ],),
-							    ),
-								  Expanded(
-								    child: Align(
-								      child: FlatButton(
-									  onPressed: () => {},
-									    child: Text(
-										    'See more',
-										    style: TextStyle(
-											    fontWeight: FontWeight.bold,
-											    color: Color(0xFF0c63b6),
-										    ),
-										    textAlign: TextAlign.left
-									    ),
-								      ),
-								    ),
-								  )
-							  ],
+					InkWell(
+						onTap: () => {},
+						child: Container(
+							child: Padding(
+								padding: EdgeInsets.all(48),
+								child: Column(
+									crossAxisAlignment: CrossAxisAlignment
+										.start,
+									mainAxisSize: MainAxisSize.min,
+									children: <Widget>[
+										Padding(
+											padding: EdgeInsets.only(bottom: 48, right: 150),
+											child: Text(
+												'Upcoming Trips',
+												style: TextStyle(
+													fontSize: 32,
+													fontWeight: FontWeight.bold,
+													color: Color(0xFF0c63b6),
+												),
+												textAlign: TextAlign.left
+											),
+										),
+										Row(
+											crossAxisAlignment: CrossAxisAlignment
+												.end,
+											mainAxisSize: MainAxisSize.min,
+											children: <Widget>[
+												Expanded(
+													child: Text(
+														'Reservations, Homes, Hotels, Things to Do...',
+														style: TextStyle(
+															color: Color(0xFF0c63b6),
+														),
+														textAlign: TextAlign.left
+													),
+												),
+												Expanded(
+													child: Align(
+														alignment: FractionalOffset.bottomRight,
+														child: Text(
+															'SEE MORE',
+															style: TextStyle(
+																fontWeight: FontWeight.bold,
+																color: Color(0xFFfe8a7f),
+															),
+														),
+													),
+												)
+											],
+										),
+									],
+								),
 							),
 						),
 					),
