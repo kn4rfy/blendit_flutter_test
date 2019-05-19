@@ -535,7 +535,42 @@ class TripsState extends State<TripsView> {
 	@override
 	Widget build(BuildContext context) {
 		return Scaffold(
-			appBar: AppBar(title: Text('Trips')),
+			appBar: AppBar(
+				actions: <Widget>[
+					Padding(
+						padding: const EdgeInsets.symmetric(horizontal: 16),
+						child: InkWell(
+							onTap: () => {},
+							child: Padding(
+								padding: const EdgeInsets.symmetric(horizontal: 8),
+								child: Row(
+									children: <Widget>[
+										Padding(
+											padding: const EdgeInsets.all(8.0),
+											child: Text(
+												'MENU',
+												style: TextStyle(
+													fontSize: 16,
+													fontWeight: FontWeight.bold,
+													color: Color(0xFF0c63b6),
+												),
+											),
+										),
+										Padding(
+											padding: const EdgeInsets.all(8.0),
+											child: Icon(
+												Icons.menu,
+												size: 32,
+												color: Color(0xFF0c63b6),
+											),
+										),
+									],
+								),
+							),
+						),
+					),
+				],
+			),
 			body: Column(
 				children: <Widget>[
 					Padding(
